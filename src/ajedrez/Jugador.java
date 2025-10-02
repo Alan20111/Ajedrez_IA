@@ -1,8 +1,8 @@
 package ajedrez;
 
-/**
- * Interfaz que define el comportamiento que debe tener cualquier tipo de jugador (humano, IA, etc.).
- */
+import java.util.List;
+
 public interface Jugador {
-    Movimiento obtenerMovimiento(Tablero tablero);
+    // Le pasamos la lista de movimientos válidos para que el jugador (especialmente la IA) elija uno.
+    Movimiento obtenerMovimiento(Tablero tablero, List<Movimiento> movimientosValidos);
 }

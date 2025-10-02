@@ -1,8 +1,7 @@
 package ajedrez;
 
-/**
- * Contenedor de datos inmutable que representa un movimiento desde una Posicion de inicio a una de fin.
- */
+import ajedrez.piezas.Pieza;
+
 public class Movimiento {
     private final Posicion inicio;
     private final Posicion fin;
@@ -12,12 +11,16 @@ public class Movimiento {
         this.fin = fin;
     }
 
-    public Posicion getInicio() {
-        return inicio;
-    }
+    public Posicion getInicio() { return inicio; }
+    public Posicion getFin() { return fin; }
 
-    public Posicion getFin() {
-        return fin;
+    /**
+     * Método de ayuda para obtener la pieza que se mueve, útil para la IA.
+     * @param tablero El estado actual del tablero.
+     * @return La pieza en la posición de inicio del movimiento.
+     */
+    public Pieza getPieza(Tablero tablero) {
+        return tablero.getPiezaEn(this.inicio);
     }
 
     @Override

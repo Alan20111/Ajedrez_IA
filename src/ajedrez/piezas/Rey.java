@@ -11,42 +11,52 @@ public class Rey extends Pieza {
         super(color, posicion);
     }
 
+    public boolean seHaMovido() { return seHaMovido; }
+
+    public void restaurarEstadoMovimiento() { this.seHaMovido = false; }
+
     @Override
-    public String getSimbolo() {
-        return (getColor() == Color.BLANCO) ? "♔" : "♚";
-    }
+    public String getSimbolo() { return (getColor() == Color.BLANCO) ? "♔" : "♚"; }
 
     @Override
     public void setPosicion(Posicion nuevaPosicion) {
         super.setPosicion(nuevaPosicion);
-        this.seHaMovido = true; // Importante para el enroque
+        this.seHaMovido = true;
     }
 
     @Override
     public List<Movimiento> calcularMovimientosLegales(Tablero tablero) {
         List<Movimiento> movimientos = new ArrayList<>();
-
-        // Direcciones: las 8 direcciones, pero solo un paso
-        int[][] offsets = {
-                {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Ortogonales
-                {-1, -1}, {-1, 1}, {1, -1}, {1, 1}  // Diagonales
-        };
+        int[][] offsets = {{-1,0},{1,0},{0,-1},{0,1},{-1,-1},{-1,1},{1,-1},{1,1}};
 
         for (int[] offset : offsets) {
             Posicion nuevaPosicion = new Posicion(posicion.getFila() + offset[0], posicion.getColumna() + offset[1]);
-
             if (tablero.esCasillaValida(nuevaPosicion)) {
                 Pieza piezaEnDestino = tablero.getPiezaEn(nuevaPosicion);
-                // Válido si la casilla está vacía o tiene un enemigo
                 if (piezaEnDestino == null || piezaEnDestino.getColor() != this.color) {
                     movimientos.add(new Movimiento(this.posicion, nuevaPosicion));
                 }
             }
         }
 
-        // TODO: Implementar la lógica del Enroque (Castling)
-        // TODO: Implementar la lógica para no moverse a una casilla en jaque
-
+        if (!seHaMovido) {
+            // Enroque corto (lado del rey)
+            Pieza torreDerecha = tablero.getPiezaEn(posicion.getFila(), 7);
+            // --- CORRECCIÓN AQUÍ: Se añadieron los paréntesis () ---
+            if (torreDerecha instanceof Torre && !((Torre) torreDerecha).seHaMovido()) {
+                if (tablero.getPiezaEn(posicion.getFila(), 5) == null && tablero.getPiezaEn(posicion.getFila(), 6) == null) {
+                    movimientos.add(new Movimiento(this.posicion, new Posicion(posicion.getFila(), 6)));
+                }
+            }
+            // Enroque largo (lado de la reina)
+            Pieza torreIzquierda = tablero.getPiezaEn(posicion.getFila(), 0);
+            // --- CORRECCIÓN AQUÍ: Se añadieron los paréntesis () ---
+            if (torreIzquierda instanceof Torre && !((Torre) torreIzquierda).seHaMovido()) {
+                if (tablero.getPiezaEn(posicion.getFila(), 1) == null && tablero.getPiezaEn(posicion.getFila(), 2) == null && tablero.getPiezaEn(posicion.getFila(), 3) == null) {
+                    movimientos.add(new Movimiento(this.posicion, new Posicion(posicion.getFila(), 2)));
+                }
+            }
+        }
         return movimientos;
     }
 }

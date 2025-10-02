@@ -1,76 +1,163 @@
 package ajedrez;
 
-import ajedrez.piezas.Pieza;
+import ajedrez.piezas.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Partida {
     private Tablero tablero;
     private Jugador jugadorBlanco;
     private Jugador jugadorNegro;
     private Jugador jugadorActual;
+    private List<Pieza> piezasCapturadasBlancas;
+    private List<Pieza> piezasCapturadasNegras;
+    private Movimiento ultimoMovimiento;
 
-    // --- NUEVAS LISTAS PARA GUARDAR LAS PIEZAS CAPTURADAS ---
-    private List<Pieza> piezasCapturadasBlancas; // Piezas blancas capturadas por las negras
-    private List<Pieza> piezasCapturadasNegras;  // Piezas negras capturadas por las blancas
-
-    public Partida() {
-        tablero = new Tablero();
-        tablero.iniciarTablero();
-        jugadorBlanco = new JugadorHumano();
-        jugadorNegro = new JugadorHumano();
-        jugadorActual = jugadorBlanco;
-
-        // Inicializamos las listas
-        piezasCapturadasBlancas = new ArrayList<>();
-        piezasCapturadasNegras = new ArrayList<>();
+    public Partida(Jugador jugadorBlanco, Jugador jugadorNegro) {
+        this.tablero = new Tablero();
+        this.tablero.iniciarTablero();
+        this.jugadorBlanco = jugadorBlanco;
+        this.jugadorNegro = jugadorNegro;
+        this.jugadorActual = this.jugadorBlanco;
+        this.piezasCapturadasBlancas = new ArrayList<>();
+        this.piezasCapturadasNegras = new ArrayList<>();
+        this.ultimoMovimiento = null;
     }
 
     public void iniciar() {
         while (true) {
             Color colorJugadorActual = (jugadorActual == jugadorBlanco) ? Color.BLANCO : Color.NEGRO;
-
-            // --- LLAMADA MODIFICADA: AHORA PASAMOS LAS LISTAS DE CAPTURADOS ---
             tablero.imprimirTablero(colorJugadorActual, piezasCapturadasBlancas, piezasCapturadasNegras);
 
-            if (colorJugadorActual == Color.BLANCO) {
-                System.out.println("\nTurno de las Blancas.");
-            } else {
-                System.out.println("\nTurno de las Negras.");
+            if (reyEstaEnJaque(colorJugadorActual)) {
+                System.out.println("\n¡El rey " + colorJugadorActual + " está en JAQUE!");
             }
 
-            Movimiento movimiento = jugadorActual.obtenerMovimiento(tablero);
+            System.out.println("\nTurno de las " + (colorJugadorActual == Color.BLANCO ? "Blancas." : "Negras."));
 
-            if (movimiento != null) {
-                Pieza piezaAMover = tablero.getPiezaEn(movimiento.getInicio());
-
-                if (piezaAMover == null || piezaAMover.getColor() != colorJugadorActual) {
-                    System.out.println("Error: Movimiento inválido.");
-                    continue;
+            List<Movimiento> movimientosValidos = generarMovimientosValidos(colorJugadorActual);
+            if (movimientosValidos.isEmpty()) {
+                if (reyEstaEnJaque(colorJugadorActual)) {
+                    System.out.println("¡JAQUE MATE! Ganan las " + (colorJugadorActual == Color.BLANCO ? "Negras." : "Blancas."));
+                } else {
+                    System.out.println("¡TABLAS! El jugador no tiene movimientos legales (Ahogado).");
                 }
+                break;
+            }
 
-                List<Movimiento> movimientosLegales = piezaAMover.calcularMovimientosLegales(tablero);
-                if (!movimientosLegales.contains(movimiento)) {
-                    System.out.println("Error: Movimiento ilegal para esa pieza.");
-                    continue;
-                }
+            Movimiento movimiento = jugadorActual.obtenerMovimiento(tablero, movimientosValidos);
 
-                // --- LÓGICA DE CAPTURA MODIFICADA ---
-                Pieza piezaCapturada = tablero.moverPieza(movimiento);
-
+            if (movimiento != null && movimientosValidos.contains(movimiento)) {
+                Pieza piezaCapturada = procesarMovimiento(movimiento);
                 if (piezaCapturada != null) {
-                    // Imprimimos el mensaje de captura
                     System.out.println("¡Captura! La pieza " + piezaCapturada.getSimbolo() + " ha sido eliminada.");
-                    // Añadimos la pieza a la lista correcta
                     if (piezaCapturada.getColor() == Color.BLANCO) {
                         piezasCapturadasBlancas.add(piezaCapturada);
                     } else {
                         piezasCapturadasNegras.add(piezaCapturada);
                     }
                 }
-            }
 
-            jugadorActual = (jugadorActual == jugadorBlanco) ? jugadorNegro : jugadorBlanco;
+                manejarPromocion(movimiento);
+                ultimoMovimiento = movimiento;
+                jugadorActual = (jugadorActual == jugadorBlanco) ? jugadorNegro : jugadorBlanco;
+            } else {
+                if (movimiento != null) {
+                    System.out.println("Error: Movimiento ilegal. Inténtalo de nuevo.");
+                }
+            }
         }
+    }
+
+    private Pieza procesarMovimiento(Movimiento mov) {
+        Pieza pieza = tablero.getPiezaEn(mov.getInicio());
+        if (pieza instanceof Rey) {
+            int colDiff = mov.getFin().getColumna() - mov.getInicio().getColumna();
+            if (Math.abs(colDiff) == 2) {
+                int fila = mov.getInicio().getFila();
+                if (colDiff > 0) { tablero.moverPieza(new Movimiento(new Posicion(fila, 7), new Posicion(fila, 5))); }
+                else { tablero.moverPieza(new Movimiento(new Posicion(fila, 0), new Posicion(fila, 3))); }
+            }
+        }
+        if (pieza instanceof Peon) {
+            boolean esCapturaDiagonal = mov.getInicio().getColumna() != mov.getFin().getColumna();
+            if (esCapturaDiagonal && tablero.getPiezaEn(mov.getFin()) == null) {
+                int filaPeonCapturado = mov.getInicio().getFila();
+                int colPeonCapturado = mov.getFin().getColumna();
+                Pieza peonCapturado = tablero.getPiezaEn(filaPeonCapturado, colPeonCapturado);
+                tablero.reemplazarPieza(new Posicion(filaPeonCapturado, colPeonCapturado), null);
+                return peonCapturado;
+            }
+        }
+        return tablero.moverPieza(mov);
+    }
+
+    private void manejarPromocion(Movimiento mov) {
+        Pieza piezaMovida = tablero.getPiezaEn(mov.getFin());
+        if (piezaMovida instanceof Peon) {
+            Color color = piezaMovida.getColor();
+            int filaFin = mov.getFin().getFila();
+            if ((color == Color.BLANCO && filaFin == 0) || (color == Color.NEGRO && filaFin == 7)) {
+                System.out.println("¡Promoción de Peón! Elige una pieza (Reyna, Torre, Alfil, Caballo): ");
+                Scanner scanner = new Scanner(System.in);
+                Pieza nuevaPieza = null;
+                while (nuevaPieza == null) {
+                    String eleccionInput = scanner.next().trim().toLowerCase();
+                    String eleccion = eleccionInput.substring(0, 1).toUpperCase() + eleccionInput.substring(1);
+                    switch (eleccion) {
+                        case "Reyna": nuevaPieza = new Reina(color, mov.getFin()); break;
+                        case "Torre": nuevaPieza = new Torre(color, mov.getFin()); break;
+                        case "Alfil": nuevaPieza = new Alfil(color, mov.getFin()); break;
+                        case "Caballo": nuevaPieza = new Caballo(color, mov.getFin()); break;
+                        default: System.out.println("Elección inválida. Escribe el nombre completo (Reyna, Torre, Alfil, Caballo):");
+                    }
+                }
+                tablero.reemplazarPieza(mov.getFin(), nuevaPieza);
+            }
+        }
+    }
+
+    private List<Movimiento> generarMovimientosValidos(Color color) {
+        List<Movimiento> movimientosValidos = new ArrayList<>();
+        for (Pieza pieza : obtenerTodasLasPiezas(color)) {
+            List<Movimiento> movimientosPseudoLegales = (pieza instanceof Peon)
+                    ? ((Peon) pieza).calcularMovimientosLegales(tablero, ultimoMovimiento)
+                    : pieza.calcularMovimientosLegales(tablero);
+            for (Movimiento mov : movimientosPseudoLegales) {
+                Pieza piezaCapturada = tablero.moverPieza(mov);
+                if (!reyEstaEnJaque(color)) {
+                    movimientosValidos.add(mov);
+                }
+                tablero.deshacerMovimiento(mov, piezaCapturada);
+            }
+        }
+        return movimientosValidos;
+    }
+
+    public boolean reyEstaEnJaque(Color colorRey){ Posicion p=encontrarRey(colorRey); return p!=null&&esCasillaAtacada(p,(colorRey==Color.BLANCO)?Color.NEGRO:Color.BLANCO); }
+    private Posicion encontrarRey(Color color){ for(int f=0;f<8;f++){for(int c=0;c<8;c++){Pieza p=tablero.getPiezaEn(f,c); if(p instanceof Rey&&p.getColor()==color){return p.getPosicion();}}} return null; }
+    public boolean esCasillaAtacada(Posicion pos, Color colorAtacante) {
+        for(Pieza p : obtenerTodasLasPiezas(colorAtacante)) {
+            List<Movimiento> movimientos = (p instanceof Peon)
+                    ? ((Peon) p).calcularMovimientosLegales(tablero, ultimoMovimiento)
+                    : p.calcularMovimientosLegales(tablero);
+            for(Movimiento m : movimientos) {
+                if(m.getFin().equals(pos)) return true;
+            }
+        }
+        return false;
+    }
+    private List<Pieza> obtenerTodasLasPiezas(Color color){
+        List<Pieza> piezas = new ArrayList<>();
+        for (int f = 0; f < 8; f++) {
+            for (int c = 0; c < 8; c++) {
+                Pieza p = tablero.getPiezaEn(f, c);
+                if (p != null && p.getColor() == color) {
+                    piezas.add(p);
+                }
+            }
+        }
+        return piezas;
     }
 }

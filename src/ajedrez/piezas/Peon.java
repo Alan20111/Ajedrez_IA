@@ -11,6 +11,18 @@ public class Peon extends Pieza {
         super(color, posicion);
     }
 
+    // --- NUEVO MÉTODO PARA CORREGIR EL ERROR ---
+    /**
+     * Un método especial para ser llamado al deshacer un movimiento.
+     * Si la pieza vuelve a su fila original, reseteamos su estado de "primer movimiento".
+     */
+    public void restaurarEstadoMovimiento() {
+        int filaOriginal = (this.color == Color.BLANCO) ? 6 : 1;
+        if (this.posicion.getFila() == filaOriginal) {
+            this.seHaMovido = false;
+        }
+    }
+
     @Override
     public String getSimbolo() { return (getColor() == Color.BLANCO) ? "♙" : "♟"; }
 
@@ -20,8 +32,7 @@ public class Peon extends Pieza {
         this.seHaMovido = true;
     }
 
-    @Override
-    public List<Movimiento> calcularMovimientosLegales(Tablero tablero) {
+    public List<Movimiento> calcularMovimientosLegales(Tablero tablero, Movimiento ultimoMovimientoOponente) {
         List<Movimiento> movimientos = new ArrayList<>();
         int filaActual = this.posicion.getFila();
         int colActual = this.posicion.getColumna();
@@ -30,7 +41,7 @@ public class Peon extends Pieza {
         Posicion unPaso = new Posicion(filaActual + direccion, colActual);
         if (tablero.esCasillaValida(unPaso) && tablero.getPiezaEn(unPaso) == null) {
             movimientos.add(new Movimiento(this.posicion, unPaso));
-            if (!this.seHaMovido) {
+            if (!this.seHaMovido) { // Esta condición ahora funcionará correctamente
                 Posicion dosPasos = new Posicion(filaActual + 2 * direccion, colActual);
                 if (tablero.esCasillaValida(dosPasos) && tablero.getPiezaEn(dosPasos) == null) {
                     movimientos.add(new Movimiento(this.posicion, dosPasos));
@@ -48,6 +59,23 @@ public class Peon extends Pieza {
                 }
             }
         }
+
+        if (ultimoMovimientoOponente != null) {
+            Pieza piezaMovida = tablero.getPiezaEn(ultimoMovimientoOponente.getFin());
+            if (piezaMovida instanceof Peon &&
+                    Math.abs(ultimoMovimientoOponente.getFin().getFila() - ultimoMovimientoOponente.getInicio().getFila()) == 2 &&
+                    ultimoMovimientoOponente.getFin().getFila() == filaActual &&
+                    Math.abs(ultimoMovimientoOponente.getFin().getColumna() - colActual) == 1)
+            {
+                Posicion posCaptura = new Posicion(filaActual + direccion, ultimoMovimientoOponente.getFin().getColumna());
+                movimientos.add(new Movimiento(this.posicion, posCaptura));
+            }
+        }
         return movimientos;
+    }
+
+    @Override
+    public List<Movimiento> calcularMovimientosLegales(Tablero tablero) {
+        return calcularMovimientosLegales(tablero, null);
     }
 }
