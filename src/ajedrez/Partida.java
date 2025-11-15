@@ -30,7 +30,7 @@ public class Partida {
             Color colorJugadorActual = (jugadorActual == jugadorBlanco) ? Color.BLANCO : Color.NEGRO;
 
             tablero.imprimirTablero(colorJugadorActual, piezasCapturadasBlancas, piezasCapturadasNegras);
-           
+
             boolean estaEnJaque = reyEstaEnJaque(colorJugadorActual);
 
             if (estaEnJaque) {
