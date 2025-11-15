@@ -2,6 +2,9 @@ package ajedrez;
 
 import java.util.Scanner;
 
+/**
+ * Clase principal que contiene el punto de entrada (main) y el menú del juego.
+ */
 public class Ajedrez {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -23,8 +26,31 @@ public class Ajedrez {
                     partida.iniciar();
                     break;
                 case "2":
-                    System.out.println("\nIniciando partida: Jugador vs. IA...");
-                    partida = new Partida(new JugadorHumano(), new JugadorIA());
+                    int profundidad;
+                    while (true) {
+                        System.out.println("\n--- Dificultad de la IA ---");
+                        System.out.println("1. Fácil (Piensa 2 plys)");
+                        System.out.println("2. Medio (Piensa 4 plys)");
+                        System.out.println("3. Difícil (Piensa 6 plys)");
+                        System.out.print("Elige una opción: ");
+
+                        String dif = scanner.nextLine();
+                        if (dif.equals("1")) {
+                            profundidad = 2;
+                            break;
+                        } else if (dif.equals("2")) {
+                            profundidad = 4;
+                            break;
+                        } else if (dif.equals("3")) {
+                            profundidad = 6;
+                            break;
+                        } else {
+                            System.out.println("Opción no válida. Inténtalo de nuevo.");
+                        }
+                    }
+
+                    System.out.println("\nIniciando partida: Jugador vs. IA (Profundidad " + profundidad + " plys)...");
+                    partida = new Partida(new JugadorHumano(), new JugadorIA(profundidad));
                     partida.iniciar();
                     break;
                 case "3":

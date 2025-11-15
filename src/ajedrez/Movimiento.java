@@ -14,11 +14,6 @@ public class Movimiento {
     public Posicion getInicio() { return inicio; }
     public Posicion getFin() { return fin; }
 
-    /**
-     * Método de ayuda para obtener la pieza que se mueve, útil para la IA.
-     * @param tablero El estado actual del tablero.
-     * @return La pieza en la posición de inicio del movimiento.
-     */
     public Pieza getPieza(Tablero tablero) {
         return tablero.getPiezaEn(this.inicio);
     }
@@ -28,14 +23,16 @@ public class Movimiento {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Movimiento otro = (Movimiento) obj;
-        return inicio.getFila() == otro.inicio.getFila() &&
-                inicio.getColumna() == otro.inicio.getColumna() &&
-                fin.getFila() == otro.fin.getFila() &&
-                fin.getColumna() == otro.fin.getColumna();
+        return inicio.equals(otro.inicio) && fin.equals(otro.fin);
     }
 
     @Override
     public int hashCode() {
-        return 31 * (31 * inicio.getFila() + inicio.getColumna()) + (31 * fin.getFila() + fin.getColumna());
+        return 31 * inicio.hashCode() + fin.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.inicio.toString() + this.fin.toString();
     }
 }

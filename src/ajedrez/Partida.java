@@ -28,17 +28,20 @@ public class Partida {
     public void iniciar() {
         while (true) {
             Color colorJugadorActual = (jugadorActual == jugadorBlanco) ? Color.BLANCO : Color.NEGRO;
-            tablero.imprimirTablero(colorJugadorActual, piezasCapturadasBlancas, piezasCapturadasNegras);
 
-            if (reyEstaEnJaque(colorJugadorActual)) {
+            tablero.imprimirTablero(Color.BLANCO, piezasCapturadasBlancas, piezasCapturadasNegras);
+
+            boolean estaEnJaque = reyEstaEnJaque(colorJugadorActual);
+
+            if (estaEnJaque) {
                 System.out.println("\n¡El rey " + colorJugadorActual + " está en JAQUE!");
             }
 
             System.out.println("\nTurno de las " + (colorJugadorActual == Color.BLANCO ? "Blancas." : "Negras."));
 
-            List<Movimiento> movimientosValidos = generarMovimientosValidos(colorJugadorActual);
+            List<Movimiento> movimientosValidos = generarMovimientosValidos(colorJugadorActual, estaEnJaque);
             if (movimientosValidos.isEmpty()) {
-                if (reyEstaEnJaque(colorJugadorActual)) {
+                if (estaEnJaque) {
                     System.out.println("¡JAQUE MATE! Ganan las " + (colorJugadorActual == Color.BLANCO ? "Negras." : "Blancas."));
                 } else {
                     System.out.println("¡TABLAS! El jugador no tiene movimientos legales (Ahogado).");
@@ -47,6 +50,16 @@ public class Partida {
             }
 
             Movimiento movimiento = jugadorActual.obtenerMovimiento(tablero, movimientosValidos);
+
+            if (jugadorActual instanceof JugadorHumano && movimiento == JugadorHumano.MOVIMIENTO_SALIR) {
+                System.out.println("\nPartida terminada por el jugador.");
+                return;
+            }
+
+            if (jugadorActual instanceof JugadorIA && movimiento != null) {
+                Pieza piezaMovidaIA = tablero.getPiezaEn(movimiento.getInicio());
+                System.out.println("La IA ha movido " + piezaMovidaIA.getSimbolo() + " de " + movimiento.toString());
+            }
 
             if (movimiento != null && movimientosValidos.contains(movimiento)) {
                 Pieza piezaCapturada = procesarMovimiento(movimiento);
@@ -62,16 +75,20 @@ public class Partida {
                 manejarPromocion(movimiento);
                 ultimoMovimiento = movimiento;
                 jugadorActual = (jugadorActual == jugadorBlanco) ? jugadorNegro : jugadorBlanco;
-            } else {
-                if (movimiento != null) {
-                    System.out.println("Error: Movimiento ilegal. Inténtalo de nuevo.");
-                }
+            } else if (movimiento != null) {
+                System.out.println("Error: Movimiento ilegal o formato incorrecto. Inténtalo de nuevo.");
             }
         }
     }
 
+    // --- CÓDIGO CORREGIDO ---
+    // El método ahora maneja la captura al paso y el movimiento del peón correctamente.
     private Pieza procesarMovimiento(Movimiento mov) {
         Pieza pieza = tablero.getPiezaEn(mov.getInicio());
+        // Obtenemos la pieza en la casilla de destino ANTES de mover
+        Pieza piezaCapturada = tablero.getPiezaEn(mov.getFin());
+
+        // Lógica de Enroque (mueve la torre)
         if (pieza instanceof Rey) {
             int colDiff = mov.getFin().getColumna() - mov.getInicio().getColumna();
             if (Math.abs(colDiff) == 2) {
@@ -80,18 +97,29 @@ public class Partida {
                 else { tablero.moverPieza(new Movimiento(new Posicion(fila, 0), new Posicion(fila, 3))); }
             }
         }
+
+        // Lógica de Captura al Paso (identifica la pieza a capturar)
         if (pieza instanceof Peon) {
             boolean esCapturaDiagonal = mov.getInicio().getColumna() != mov.getFin().getColumna();
-            if (esCapturaDiagonal && tablero.getPiezaEn(mov.getFin()) == null) {
+            // Si es un movimiento diagonal Y la casilla de destino está vacía
+            if (esCapturaDiagonal && piezaCapturada == null) {
+                // Es una captura al paso. La pieza a capturar está al lado.
                 int filaPeonCapturado = mov.getInicio().getFila();
                 int colPeonCapturado = mov.getFin().getColumna();
-                Pieza peonCapturado = tablero.getPiezaEn(filaPeonCapturado, colPeonCapturado);
+                // Esta es la pieza que realmente fue capturada
+                piezaCapturada = tablero.getPiezaEn(filaPeonCapturado, colPeonCapturado);
+                // La eliminamos manualmente
                 tablero.reemplazarPieza(new Posicion(filaPeonCapturado, colPeonCapturado), null);
-                return peonCapturado;
             }
         }
-        return tablero.moverPieza(mov);
+
+        // Finalmente, ejecutamos el movimiento principal (ej. mover el peón de e5 a f6)
+        tablero.moverPieza(mov);
+
+        // Devolvemos la pieza capturada correcta (sea la de 'fin' o la de 'en passant')
+        return piezaCapturada;
     }
+    // --- FIN DE CÓDIGO CORREGIDO ---
 
     private void manejarPromocion(Movimiento mov) {
         Pieza piezaMovida = tablero.getPiezaEn(mov.getFin());
@@ -118,18 +146,43 @@ public class Partida {
         }
     }
 
-    private List<Movimiento> generarMovimientosValidos(Color color) {
+    private List<Movimiento> generarMovimientosValidos(Color color, boolean estaEnJaque) {
         List<Movimiento> movimientosValidos = new ArrayList<>();
         for (Pieza pieza : obtenerTodasLasPiezas(color)) {
             List<Movimiento> movimientosPseudoLegales = (pieza instanceof Peon)
                     ? ((Peon) pieza).calcularMovimientosLegales(tablero, ultimoMovimiento)
                     : pieza.calcularMovimientosLegales(tablero);
+
             for (Movimiento mov : movimientosPseudoLegales) {
+                boolean movimientoValido = true;
+
+                if (pieza instanceof Rey) {
+                    int colDiff = mov.getFin().getColumna() - mov.getInicio().getColumna();
+                    if (Math.abs(colDiff) == 2) {
+                        if (estaEnJaque) {
+                            movimientoValido = false;
+                        } else {
+                            Posicion posPaso;
+                            if (colDiff > 0) { posPaso = new Posicion(mov.getInicio().getFila(), mov.getInicio().getColumna() + 1); }
+                            else { posPaso = new Posicion(mov.getInicio().getFila(), mov.getInicio().getColumna() - 1); }
+                            if (esCasillaAtacada(posPaso, (color == Color.BLANCO) ? Color.NEGRO : Color.BLANCO)) {
+                                movimientoValido = false;
+                            }
+                        }
+                    }
+                }
+
+                if (!movimientoValido) { continue; }
+
                 Pieza piezaCapturada = tablero.moverPieza(mov);
-                if (!reyEstaEnJaque(color)) {
-                    movimientosValidos.add(mov);
+                if (reyEstaEnJaque(color)) {
+                    movimientoValido = false;
                 }
                 tablero.deshacerMovimiento(mov, piezaCapturada);
+
+                if (movimientoValido) {
+                    movimientosValidos.add(mov);
+                }
             }
         }
         return movimientosValidos;

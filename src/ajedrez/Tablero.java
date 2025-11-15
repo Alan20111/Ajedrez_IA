@@ -6,7 +6,6 @@ import java.util.List;
 public class Tablero {
     private final Pieza[][] casillas;
 
-    // --- MÉTODO MODIFICADO PARA CORREGIR EL ENROQUE ---
     public void deshacerMovimiento(Movimiento movimiento, Pieza piezaCapturada) {
         Posicion inicio = movimiento.getInicio();
         Posicion fin = movimiento.getFin();
@@ -16,7 +15,6 @@ public class Tablero {
         if (piezaMovida != null) {
             piezaMovida.setPosicion(inicio);
 
-            // Lógica para restaurar el estado "seHaMovido"
             if (piezaMovida instanceof Peon) {
                 ((Peon) piezaMovida).restaurarEstadoMovimiento();
             }
@@ -37,12 +35,25 @@ public class Tablero {
         casillas[fin.getFila()][fin.getColumna()] = piezaCapturada;
     }
 
-    // --- EL RESTO DE LA CLASE NO CAMBIA ---
-    public Tablero() { this.casillas = new Pieza[8][8]; }
-    public void reemplazarPieza(Posicion pos, Pieza nuevaPieza) { if(esCasillaValida(pos)){casillas[pos.getFila()][pos.getColumna()]=nuevaPieza;}}
-    public Pieza getPiezaEn(Posicion pos) { if (!esCasillaValida(pos)) return null; return casillas[pos.getFila()][pos.getColumna()]; }
-    public Pieza getPiezaEn(int fila, int col) { return casillas[fila][col]; }
-    public boolean esCasillaValida(Posicion pos) { int f=pos.getFila(),c=pos.getColumna(); return f>=0&&f<8&&c>=0&&c<8; }
+    public Tablero() {
+        this.casillas = new Pieza[8][8];
+    }
+    public void reemplazarPieza(Posicion pos, Pieza nuevaPieza) {
+        if(esCasillaValida(pos)){casillas[pos.getFila()][pos.getColumna()]=nuevaPieza;
+        }
+    }
+    public Pieza getPiezaEn(Posicion pos) {
+        if (!esCasillaValida(pos))
+            return null;
+        return casillas[pos.getFila()][pos.getColumna()];
+    }
+    public Pieza getPiezaEn(int fila, int col) {
+        return casillas[fila][col];
+    }
+    public boolean esCasillaValida(Posicion pos) {
+        int f=pos.getFila(),c=pos.getColumna();
+        return f>=0&&f<8&&c>=0&&c<8;
+    }
     public Pieza moverPieza(Movimiento movimiento) {
         Posicion inicio = movimiento.getInicio(); Posicion fin = movimiento.getFin();
         Pieza piezaAMover = getPiezaEn(inicio); Pieza piezaCapturada = getPiezaEn(fin);
@@ -54,8 +65,23 @@ public class Tablero {
     public void imprimirTablero(Color j, List<Pieza> cb, List<Pieza> cn) {
         System.out.print("\nCapturadas por Negras: "); for(Pieza p:cb){System.out.print(p.getSimbolo()+" ");}
         System.out.print("\n   a b c d e f g h\n  -----------------\n");
-        if(j==Color.BLANCO){for(int f=0;f<8;f++){System.out.print((8-f)+"|");for(int c=0;c<8;c++){imprimirCasilla(f,c);}System.out.println(" |"+(8-f));}}
-        else{for(int f=7;f>=0;f--){System.out.print((8-f)+"|");for(int c=0;c<8;c++){imprimirCasilla(f,c);}System.out.println(" |"+(8-f));}}
+        if(j==Color.BLANCO){
+            for(int f=0;f<8;f++){
+                System.out.print((8-f)+"|");
+                for(int c=0;c<8;c++){
+                    imprimirCasilla(f,c);
+                }System.out.println(" |"+(8-f));
+            }
+        }
+        else{
+            for(int f=7;f>=0;f--){
+                System.out.print((8-f)+"|");
+                for(int c=0;c<8;c++){
+                    imprimirCasilla(f,c);
+                }
+                System.out.println(" |"+(8-f));
+            }
+        }
         System.out.println("  -----------------\n   a b c d e f g h");
         System.out.print("Capturadas por Blancas: "); for(Pieza p:cn){System.out.print(p.getSimbolo()+" ");} System.out.println();
     }

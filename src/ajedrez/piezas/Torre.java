@@ -11,24 +11,13 @@ public class Torre extends Pieza {
         super(color, posicion);
     }
 
-    // --- MÉTODOS AÑADIDOS ---
-    /**
-     * Permite que otras clases pregunten de forma segura si la torre ya se ha movido.
-     * Es necesario para la validación del enroque en la clase Rey.
-     * @return true si la torre ya realizó un movimiento, false en caso contrario.
-     */
     public boolean seHaMovido() {
         return seHaMovido;
     }
 
-    /**
-     * Restaura el estado de la bandera 'seHaMovido'.
-     * Es crucial para que la simulación de movimientos no corrompa el estado de la pieza.
-     */
     public void restaurarEstadoMovimiento() {
         this.seHaMovido = false;
     }
-    // --- FIN DE MÉTODOS AÑADIDOS ---
 
     @Override
     public String getSimbolo() {
@@ -38,7 +27,7 @@ public class Torre extends Pieza {
     @Override
     public void setPosicion(Posicion nuevaPosicion) {
         super.setPosicion(nuevaPosicion);
-        this.seHaMovido = true; // Importante para el enroque
+        this.seHaMovido = true; //Para el enroque
     }
 
     @Override

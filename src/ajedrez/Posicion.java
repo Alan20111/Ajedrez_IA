@@ -1,9 +1,5 @@
 package ajedrez;
 
-/**
- * Contenedor de datos inmutable para las coordenadas (fila, columna) del tablero.
- * VERSIÓN CORREGIDA con los métodos equals() y hashCode() para una correcta comparación.
- */
 public class Posicion {
     private final int fila;
     private final int columna;
@@ -13,30 +9,30 @@ public class Posicion {
         this.columna = columna;
     }
 
-    public int getFila() {
-        return fila;
-    }
-
-    public int getColumna() {
-        return columna;
-    }
-
-    // --- MÉTODOS AÑADIDOS PARA CORREGIR LA DETECCIÓN DE JAQUE ---
+    public int getFila() { return fila; }
+    public int getColumna() { return columna; }
 
     @Override
     public boolean equals(Object obj) {
-        // Un objeto es igual a sí mismo
         if (this == obj) return true;
-        // Un objeto no puede ser igual a null o a un objeto de otra clase
         if (obj == null || getClass() != obj.getClass()) return false;
-        // Comparamos los valores de fila y columna
         Posicion otra = (Posicion) obj;
         return fila == otra.fila && columna == otra.columna;
     }
 
     @Override
     public int hashCode() {
-        // Genera un número único basado en la fila y la columna
         return 31 * fila + columna;
+    }
+
+    /**
+     * Convierte las coordenadas internas (ej. fila=6, col=4)
+     * a la notación de ajedrez estándar (ej. "e2").
+     */
+    @Override
+    public String toString() {
+        // (char)('a' + this.columna) convierte 0->'a', 1->'b', etc.
+        // (8 - this.fila) convierte 0->'8', 1->'7', etc.
+        return "" + (char)('a' + this.columna) + (8 - this.fila);
     }
 }

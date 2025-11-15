@@ -2,7 +2,6 @@ package ajedrez.piezas;
 
 import java.util.List;
 import ajedrez.*;
-
 /**
  * Clase base abstracta para todas las piezas de ajedrez.
  */

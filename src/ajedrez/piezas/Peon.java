@@ -11,11 +11,6 @@ public class Peon extends Pieza {
         super(color, posicion);
     }
 
-    // --- NUEVO MÉTODO PARA CORREGIR EL ERROR ---
-    /**
-     * Un método especial para ser llamado al deshacer un movimiento.
-     * Si la pieza vuelve a su fila original, reseteamos su estado de "primer movimiento".
-     */
     public void restaurarEstadoMovimiento() {
         int filaOriginal = (this.color == Color.BLANCO) ? 6 : 1;
         if (this.posicion.getFila() == filaOriginal) {

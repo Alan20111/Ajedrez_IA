@@ -11,8 +11,6 @@ public class Rey extends Pieza {
         super(color, posicion);
     }
 
-    public boolean seHaMovido() { return seHaMovido; }
-
     public void restaurarEstadoMovimiento() { this.seHaMovido = false; }
 
     @Override
@@ -42,7 +40,6 @@ public class Rey extends Pieza {
         if (!seHaMovido) {
             // Enroque corto (lado del rey)
             Pieza torreDerecha = tablero.getPiezaEn(posicion.getFila(), 7);
-            // --- CORRECCIÓN AQUÍ: Se añadieron los paréntesis () ---
             if (torreDerecha instanceof Torre && !((Torre) torreDerecha).seHaMovido()) {
                 if (tablero.getPiezaEn(posicion.getFila(), 5) == null && tablero.getPiezaEn(posicion.getFila(), 6) == null) {
                     movimientos.add(new Movimiento(this.posicion, new Posicion(posicion.getFila(), 6)));
@@ -50,7 +47,6 @@ public class Rey extends Pieza {
             }
             // Enroque largo (lado de la reina)
             Pieza torreIzquierda = tablero.getPiezaEn(posicion.getFila(), 0);
-            // --- CORRECCIÓN AQUÍ: Se añadieron los paréntesis () ---
             if (torreIzquierda instanceof Torre && !((Torre) torreIzquierda).seHaMovido()) {
                 if (tablero.getPiezaEn(posicion.getFila(), 1) == null && tablero.getPiezaEn(posicion.getFila(), 2) == null && tablero.getPiezaEn(posicion.getFila(), 3) == null) {
                     movimientos.add(new Movimiento(this.posicion, new Posicion(posicion.getFila(), 2)));
