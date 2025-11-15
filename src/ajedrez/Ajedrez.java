@@ -31,7 +31,7 @@ public class Ajedrez {
                         System.out.println("\n--- Dificultad de la IA ---");
                         System.out.println("1. Fácil (Piensa 2 plys)");
                         System.out.println("2. Medio (Piensa 4 plys)");
-                        System.out.println("3. Difícil (Piensa 6 plys)");
+                        System.out.println("3. Difícil (Piensa 5 plys)");
                         System.out.print("Elige una opción: ");
 
                         String dif = scanner.nextLine();
@@ -42,7 +42,7 @@ public class Ajedrez {
                             profundidad = 4;
                             break;
                         } else if (dif.equals("3")) {
-                            profundidad = 6;
+                            profundidad = 5;
                             break;
                         } else {
                             System.out.println("Opción no válida. Inténtalo de nuevo.");

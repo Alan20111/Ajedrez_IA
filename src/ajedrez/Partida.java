@@ -29,8 +29,8 @@ public class Partida {
         while (true) {
             Color colorJugadorActual = (jugadorActual == jugadorBlanco) ? Color.BLANCO : Color.NEGRO;
 
-            tablero.imprimirTablero(Color.BLANCO, piezasCapturadasBlancas, piezasCapturadasNegras);
-
+            tablero.imprimirTablero(colorJugadorActual, piezasCapturadasBlancas, piezasCapturadasNegras);
+           
             boolean estaEnJaque = reyEstaEnJaque(colorJugadorActual);
 
             if (estaEnJaque) {
@@ -81,14 +81,11 @@ public class Partida {
         }
     }
 
-    // --- CÓDIGO CORREGIDO ---
-    // El método ahora maneja la captura al paso y el movimiento del peón correctamente.
+    // --- El resto de la clase Partida (métodos privados) no cambia ---
     private Pieza procesarMovimiento(Movimiento mov) {
         Pieza pieza = tablero.getPiezaEn(mov.getInicio());
-        // Obtenemos la pieza en la casilla de destino ANTES de mover
         Pieza piezaCapturada = tablero.getPiezaEn(mov.getFin());
 
-        // Lógica de Enroque (mueve la torre)
         if (pieza instanceof Rey) {
             int colDiff = mov.getFin().getColumna() - mov.getInicio().getColumna();
             if (Math.abs(colDiff) == 2) {
@@ -98,28 +95,19 @@ public class Partida {
             }
         }
 
-        // Lógica de Captura al Paso (identifica la pieza a capturar)
         if (pieza instanceof Peon) {
             boolean esCapturaDiagonal = mov.getInicio().getColumna() != mov.getFin().getColumna();
-            // Si es un movimiento diagonal Y la casilla de destino está vacía
             if (esCapturaDiagonal && piezaCapturada == null) {
-                // Es una captura al paso. La pieza a capturar está al lado.
                 int filaPeonCapturado = mov.getInicio().getFila();
                 int colPeonCapturado = mov.getFin().getColumna();
-                // Esta es la pieza que realmente fue capturada
                 piezaCapturada = tablero.getPiezaEn(filaPeonCapturado, colPeonCapturado);
-                // La eliminamos manualmente
                 tablero.reemplazarPieza(new Posicion(filaPeonCapturado, colPeonCapturado), null);
             }
         }
 
-        // Finalmente, ejecutamos el movimiento principal (ej. mover el peón de e5 a f6)
         tablero.moverPieza(mov);
-
-        // Devolvemos la pieza capturada correcta (sea la de 'fin' o la de 'en passant')
         return piezaCapturada;
     }
-    // --- FIN DE CÓDIGO CORREGIDO ---
 
     private void manejarPromocion(Movimiento mov) {
         Pieza piezaMovida = tablero.getPiezaEn(mov.getFin());
