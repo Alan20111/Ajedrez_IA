@@ -16,24 +16,78 @@ public class Tablero {
             piezaMovida.setPosicion(inicio);
 
             if (piezaMovida instanceof Peon) {
-                ((Peon) piezaMovida).restaurarEstadoMovimiento();
-            }
-            if (piezaMovida instanceof Rey) {
-                int filaOriginal = (piezaMovida.getColor() == Color.BLANCO) ? 7 : 0;
-                if (inicio.getFila() == filaOriginal && inicio.getColumna() == 4) {
-                    ((Rey) piezaMovida).restaurarEstadoMovimiento();
+                int filaOriginalPeon = (piezaMovida.getColor() == Color.BLANCO) ? 6 : 1;
+                if (inicio.getFila() == filaOriginalPeon) {
+                    ((Peon) piezaMovida).restaurarEstadoMovimiento();
                 }
             }
+
+
+            if (piezaMovida instanceof Rey) {
+                int colDiff = fin.getColumna() - inicio.getColumna();
+                if (Math.abs(colDiff) == 2) {
+                    ((Rey) piezaMovida).restaurarEstadoMovimiento();
+
+                    int fila = inicio.getFila();
+                    if (colDiff > 0) { // Fue enroque corto (Rey se movió a g1/g8)
+                        Pieza torre = getPiezaEn(new Posicion(fila, 5));
+                        if (torre != null && torre instanceof Torre) {
+                            casillas[fila][7] = torre;
+                            torre.setPosicion(new Posicion(fila, 7));
+                            casillas[fila][5] = null;
+                            ((Torre) torre).restaurarEstadoMovimiento();
+                        }
+                    } else { // Fue enroque largo (Rey se movió a c1/c8)
+                        Pieza torre = getPiezaEn(new Posicion(fila, 3));
+                        if (torre != null && torre instanceof Torre) {
+                            casillas[fila][0] = torre;
+                            torre.setPosicion(new Posicion(fila, 0));
+                            casillas[fila][3] = null;
+                            ((Torre) torre).restaurarEstadoMovimiento();
+                        }
+                    }
+                } else {
+                    int filaOriginal = (piezaMovida.getColor() == Color.BLANCO) ? 7 : 0;
+                    if (inicio.getFila() == filaOriginal && inicio.getColumna() == 4 && ((Rey) piezaMovida).seHaMovido()) {
+                        ((Rey) piezaMovida).restaurarEstadoMovimiento();
+                    }
+                }
+            }
+
             if (piezaMovida instanceof Torre) {
                 int filaOriginal = (piezaMovida.getColor() == Color.BLANCO) ? 7 : 0;
-                if (inicio.getFila() == filaOriginal && (inicio.getColumna() == 0 || inicio.getColumna() == 7)) {
+                if (inicio.getFila() == filaOriginal && (inicio.getColumna() == 0 || inicio.getColumna() == 7) && ((Torre) piezaMovida).seHaMovido()) {
                     ((Torre) piezaMovida).restaurarEstadoMovimiento();
                 }
             }
         }
 
-        casillas[fin.getFila()][fin.getColumna()] = piezaCapturada;
+        if (piezaCapturada instanceof Peon) {
+            int filaPeonCapturadoReal = (piezaMovida.getColor() == Color.BLANCO) ? fin.getFila() + 1 : fin.getFila() - 1;
+            Posicion posPeonCapturadoReal = new Posicion(filaPeonCapturadoReal, fin.getColumna());
+
+            if (getPiezaEn(fin) == null && Math.abs(movimiento.getInicio().getColumna() - movimiento.getFin().getColumna()) == 1 &&
+                    movimiento.getFin().getFila() == (piezaMovida.getColor() == Color.BLANCO ? 2 : 5) ) { // Fila de la captura al paso
+
+                casillas[posPeonCapturadoReal.getFila()][posPeonCapturadoReal.getColumna()] = piezaCapturada;
+                piezaCapturada.setPosicion(posPeonCapturadoReal);
+
+                casillas[fin.getFila()][fin.getColumna()] = null;
+
+            } else {
+                casillas[fin.getFila()][fin.getColumna()] = piezaCapturada;
+                if (piezaCapturada != null) {
+                    piezaCapturada.setPosicion(fin);
+                }
+            }
+        } else {
+            casillas[fin.getFila()][fin.getColumna()] = piezaCapturada;
+            if (piezaCapturada != null) {
+                piezaCapturada.setPosicion(fin);
+            }
+        }
     }
+
 
     public Tablero() {
         this.casillas = new Pieza[8][8];
@@ -57,6 +111,16 @@ public class Tablero {
     public Pieza moverPieza(Movimiento movimiento) {
         Posicion inicio = movimiento.getInicio(); Posicion fin = movimiento.getFin();
         Pieza piezaAMover = getPiezaEn(inicio); Pieza piezaCapturada = getPiezaEn(fin);
+
+        if (piezaAMover instanceof Peon) {
+            boolean esCapturaDiagonal = inicio.getColumna() != fin.getColumna();
+            if (esCapturaDiagonal && piezaCapturada == null) { // Es una captura al paso
+                int filaPeonCapturado = (piezaAMover.getColor() == Color.BLANCO) ? fin.getFila() + 1 : fin.getFila() - 1;
+                piezaCapturada = getPiezaEn(new Posicion(filaPeonCapturado, fin.getColumna()));
+                casillas[filaPeonCapturado][fin.getColumna()] = null; // Eliminar el peón capturado
+            }
+        }
+
         casillas[fin.getFila()][fin.getColumna()] = piezaAMover;
         casillas[inicio.getFila()][inicio.getColumna()] = null;
         if (piezaAMover != null) { piezaAMover.setPosicion(fin); }
@@ -85,6 +149,17 @@ public class Tablero {
         System.out.println("  -----------------\n   a b c d e f g h");
         System.out.print("Capturadas por Blancas: "); for(Pieza p:cn){System.out.print(p.getSimbolo()+" ");} System.out.println();
     }
-    private void imprimirCasilla(int f,int c){Pieza p=casillas[f][c];if(p==null){System.out.print("· ");}else{System.out.print(p.getSimbolo()+" ");}}
+
+    private void imprimirCasilla(int f, int c) {
+        Pieza p = casillas[f][c];
+        boolean esCasillaClara = (f + c) % 2 == 0;
+
+        if (p == null) {
+            System.out.print(esCasillaClara ? "□ " : "■ "); // Utiliza Unicode para los cuadrados
+        } else {
+            System.out.print(p.getSimbolo() + " ");
+        }
+    }
+
     public void iniciarTablero(){casillas[0][0]=new Torre(Color.NEGRO,new Posicion(0,0));casillas[0][1]=new Caballo(Color.NEGRO,new Posicion(0,1));casillas[0][2]=new Alfil(Color.NEGRO,new Posicion(0,2));casillas[0][3]=new Reina(Color.NEGRO,new Posicion(0,3));casillas[0][4]=new Rey(Color.NEGRO,new Posicion(0,4));casillas[0][5]=new Alfil(Color.NEGRO,new Posicion(0,5));casillas[0][6]=new Caballo(Color.NEGRO,new Posicion(0,6));casillas[0][7]=new Torre(Color.NEGRO,new Posicion(0,7));for(int i=0;i<8;i++){casillas[1][i]=new Peon(Color.NEGRO,new Posicion(1,i));}for(int i=0;i<8;i++){casillas[6][i]=new Peon(Color.BLANCO,new Posicion(6,i));}casillas[7][0]=new Torre(Color.BLANCO,new Posicion(7,0));casillas[7][1]=new Caballo(Color.BLANCO,new Posicion(7,1));casillas[7][2]=new Alfil(Color.BLANCO,new Posicion(7,2));casillas[7][3]=new Reina(Color.BLANCO,new Posicion(7,3));casillas[7][4]=new Rey(Color.BLANCO,new Posicion(7,4));casillas[7][5]=new Alfil(Color.BLANCO,new Posicion(7,5));casillas[7][6]=new Caballo(Color.BLANCO,new Posicion(7,6));casillas[7][7]=new Torre(Color.BLANCO,new Posicion(7,7));}
 }
