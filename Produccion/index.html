@@ -38,11 +38,23 @@
   .note{margin-top:14px;font-size:.78rem;color:var(--muted);line-height:1.5}
   .back{margin-top:22px;font-size:.9rem}
   select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:.85rem}
+  .lead{text-align:center;margin-bottom:14px}.lead .sub{margin-bottom:0}
+  .win{width:min(96vw,900px);background:#11141a;border:1px solid #2b2b2b;border-radius:8px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.55)}
+  .tbar{height:30px;background:#23262e;display:flex;align-items:center;gap:7px;padding:0 12px;border-bottom:1px solid #000}
+  .tbar i{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .tbar i.r{background:#ff5f57}.tbar i.y{background:#febc2e}.tbar i.g{background:#28c840}
+  .tbar .tt{margin-left:8px;color:#9aa7b8;font-size:12.5px}
+  .winbody{padding:20px}
 </style>
 </head>
 <body>
-  <h1>♛ Ajedrez con IA</h1>
-  <div class="sub">Demo web del proyecto Java <b>Ajedrez_IA</b> · juegas con <b>Blancas</b> contra la IA (Minimax + poda Alfa‑Beta)</div>
+  <div class="lead">
+    <h1>♛ Ajedrez con IA</h1>
+    <div class="sub">Demo web del proyecto Java <b>Ajedrez_IA</b> · juegas con <b>Blancas</b> contra la IA (Minimax + poda Alfa‑Beta) · <a href="https://portafolio-ten-olive-50.vercel.app/">← Volver al portafolio</a></div>
+  </div>
+  <div class="win">
+    <div class="tbar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="tt">Ajedrez con IA — Java · IA (Minimax + poda Alfa‑Beta)</span></div>
+    <div class="winbody">
   <div class="wrap">
     <div class="board" id="board"></div>
     <div class="panel">
@@ -56,7 +68,8 @@
       <button class="btn" id="reset">Nueva partida</button>
       <button class="btn sec" id="undo">Deshacer jugada</button>
       <div class="note">Haz clic en una pieza blanca y luego en la casilla destino. Las jugadas legales se marcan con puntos. Hay detección de jaque y jaque mate; el peón corona en reina automáticamente.</div>
-      <div class="back"><a href="https://portafolio-ten-olive-50.vercel.app/">← Volver al portafolio</a></div>
+    </div>
+      </div>
     </div>
   </div>
 
