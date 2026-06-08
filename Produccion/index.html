@@ -1,83 +1,58 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ajedrez con IA — Demo (Alan Méndez)</title>
+<html lang="es"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ajedrez de Consola — Demo (Alan Méndez)</title>
 <style>
-  :root{--bg:#0d1117;--panel:#161b22;--line:#2a3140;--txt:#e6edf3;--muted:#9aa7b8;--accent:#3b82f6;
-    --light:#ebecd0;--dark:#739552;--sel:#f6f669;--mv:#bbcb44;--cap:#e88;}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);
-    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px}
-  a{color:var(--accent);text-decoration:none}
-  h1{font-size:1.5rem;margin-bottom:4px;text-align:center}
-  .sub{color:var(--muted);font-size:.9rem;margin-bottom:18px;text-align:center}
-  .wrap{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
-  .board{width:min(88vw,520px);aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);
-    grid-template-rows:repeat(8,1fr);border:3px solid #3a4150;border-radius:6px;overflow:hidden;
-    box-shadow:0 12px 40px rgba(0,0,0,.5)}
-  .sq{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;
-    font-size:min(9vw,46px);line-height:1;user-select:none}
-  .sq.l{background:var(--light)}.sq.d{background:var(--dark)}
-  .sq.sel{box-shadow:inset 0 0 0 4px var(--sel)}
-  .piece-w{color:#fff;text-shadow:0 1px 1px #000,0 0 2px #555}
-  .piece-b{color:#222;text-shadow:0 1px 1px #aaa}
-  .dot{position:absolute;width:30%;height:30%;border-radius:50%;background:rgba(20,30,10,.35);pointer-events:none}
-  .ring{position:absolute;inset:6%;border-radius:50%;border:5px solid rgba(200,40,40,.55);pointer-events:none}
-  .coord{position:absolute;font-size:10px;color:rgba(0,0,0,.35);font-weight:700}
-  .coord.f{bottom:2px;right:3px}.coord.r{top:1px;left:3px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;width:260px;min-width:240px}
-  .status{font-size:1.05rem;font-weight:600;margin-bottom:6px}
-  .ai{color:var(--muted);font-size:.85rem;min-height:18px;margin-bottom:14px}
-  .row{display:flex;justify-content:space-between;font-size:.86rem;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--line)}
-  .btn{margin-top:14px;width:100%;background:var(--accent);color:#fff;border:none;border-radius:9px;
-    padding:10px;font-size:.95rem;font-weight:600;cursor:pointer}
-  .btn:hover{filter:brightness(1.1)}
-  .btn.sec{background:var(--panel);border:1px solid var(--line);color:var(--txt);margin-top:8px}
-  .note{margin-top:14px;font-size:.78rem;color:var(--muted);line-height:1.5}
-  .back{margin-top:22px;font-size:.9rem}
-  select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:.85rem}
-  .lead{text-align:center;margin-bottom:14px}.lead .sub{margin-bottom:0}
-  .win{width:min(96vw,900px);background:#11141a;border:1px solid #2b2b2b;border-radius:8px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.55)}
-  .tbar{height:30px;background:#23262e;display:flex;align-items:center;gap:7px;padding:0 12px;border-bottom:1px solid #000}
-  .tbar i{width:12px;height:12px;border-radius:50%;display:inline-block}
-  .tbar i.r{background:#ff5f57}.tbar i.y{background:#febc2e}.tbar i.g{background:#28c840}
-  .tbar .tt{margin-left:8px;color:#9aa7b8;font-size:12.5px}
-  .winbody{padding:20px}
-</style>
-</head>
-<body>
-  <div class="lead">
-    <h1>♛ Ajedrez con IA</h1>
-    <div class="sub">Demo web del proyecto Java <b>Ajedrez_IA</b> · juegas con <b>Blancas</b> contra la IA (Minimax + poda Alfa‑Beta) · <a href="https://portafolio-ten-olive-50.vercel.app/">← Volver al portafolio</a></div>
-  </div>
-  <div class="win">
-    <div class="tbar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="tt">Ajedrez con IA — Java · IA (Minimax + poda Alfa‑Beta)</span></div>
-    <div class="winbody">
-  <div class="wrap">
-    <div class="board" id="board"></div>
-    <div class="panel">
-      <div class="status" id="status">Turno: Blancas</div>
-      <div class="ai" id="aimsg"></div>
-      <div class="row"><span>Dificultad (profundidad)</span>
-        <select id="depth"><option value="1">Fácil</option><option value="2" selected>Media</option><option value="3">Difícil</option></select>
-      </div>
-      <div class="row"><span>Piezas capturadas por ti</span><span id="capW">—</span></div>
-      <div class="row"><span>Piezas capturadas por IA</span><span id="capB">—</span></div>
-      <button class="btn" id="reset">Nueva partida</button>
-      <button class="btn sec" id="undo">Deshacer jugada</button>
-      <div class="note">Haz clic en una pieza blanca y luego en la casilla destino. Las jugadas legales se marcan con puntos. Hay detección de jaque y jaque mate; el peón corona en reina automáticamente.</div>
-    </div>
+  body{margin:0;background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:22px 12px}
+  .lead{text-align:center;margin-bottom:14px;max-width:760px}
+  .lead h1{font-size:1.25rem;margin:0}.lead p{color:#9aa7b8;font-size:.86rem;margin:6px 0 0}.lead a{color:#5aa2ff;text-decoration:none}
+  .layout{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+  .win{flex:1 1 620px;min-width:320px;max-width:760px;border:1px solid #2b2b2b;border-radius:8px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.55);background:#0c0c0c}
+  .tbar{height:30px;background:linear-gradient(#f7f7f7,#e7e7e7);border-bottom:1px solid #c4c4c4;display:flex;align-items:center;padding:0 10px;gap:7px}
+  .tbar i{width:12px;height:12px;border-radius:50%;display:inline-block}.tbar i.r{background:#ff5f56}.tbar i.y{background:#ffbd2e}.tbar i.g{background:#27c93f}
+  .tbar .tt{margin-left:10px;font-size:12px;color:#444}
+  .term{background:#0c0c0c;color:#d6d6d6;padding:14px 16px;height:560px;overflow-y:auto;cursor:text;
+    font-family:'DejaVu Sans Mono','Consolas','Menlo','Courier New',monospace;font-size:13.5px;line-height:1.45}
+  #out{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit}
+  .inl{display:flex;align-items:baseline}
+  .inl .pr{color:#27c93f;white-space:pre}
+  #cmd{flex:1;background:transparent;border:0;outline:0;color:#fff;font:inherit;caret-color:#27c93f;padding:0;margin:0}
+  .info{width:320px;flex-shrink:0;background:#11151c;border:1px solid #2a3140;border-radius:12px;padding:18px;color:#e6edf3}
+  .info h3{font-size:1.05rem;margin:0 0 8px;color:#fff}.info h4{font-size:.8rem;margin:14px 0 6px;color:#9aa7b8;text-transform:uppercase;letter-spacing:.5px}
+  .info p{font-size:.88rem;color:#c9d4e2;line-height:1.55;margin:0}
+  .info ul{margin:8px 0 0;padding-left:18px}.info li{font-size:.85rem;color:#c9d4e2;line-height:1.5;margin-bottom:4px}
+  .info code{background:#1c2230;padding:1px 5px;border-radius:4px;font-size:.82rem}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.chips span{font-size:.72rem;background:#1c2230;border:1px solid #2a3140;color:#9aa7b8;border-radius:6px;padding:3px 8px}
+  .gh{display:block;text-align:center;background:#161b22;border:1px solid #2a3140;color:#e6edf3;border-radius:8px;padding:8px;font-size:.85rem;margin-top:10px;text-decoration:none}
+</style></head><body>
+  <div class="lead"><h1>♟︎ Ajedrez de Consola</h1>
+    <p>Demo web fiel del proyecto Java de terminal · IA con Minimax + poda Alfa‑Beta · <a href="https://portafolio-ten-olive-50.vercel.app/">← Volver al portafolio</a></p></div>
+  <div class="layout">
+    <div class="win">
+      <div class="tbar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="tt">ajedrez — java -cp out ajedrez.Ajedrez</span></div>
+      <div class="term" id="term">
+        <pre id="out"></pre>
+        <div class="inl"><span class="pr" id="prompt"></span><input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" /></div>
       </div>
     </div>
+    <aside class="info">
+      <h3>Acerca del proyecto</h3>
+      <p>Ajedrez de <b>consola</b> en Java. Implementa todas las reglas (enroque, coronación, captura al paso, jaque y jaque mate) y una <b>IA</b> con el algoritmo <b>Minimax + poda Alfa‑Beta</b>.</p>
+      <h4>Cómo jugar</h4>
+      <ul>
+        <li>Elige <code>2</code> (Jugador vs. IA) y una dificultad.</li>
+        <li>Escribe tu jugada como <code>e2e4</code> y Enter.</li>
+        <li>Juegas con Blancas; la IA responde con Negras.</li>
+        <li>Escribe <code>salir</code> para terminar.</li>
+      </ul>
+      <div class="chips"><span>Java</span><span>Minimax</span><span>Poda Alfa-Beta</span><span>Consola</span></div>
+      <a class="gh" href="https://github.com/Alan20111/Ajedrez_IA">&lt;/&gt; Código en GitHub</a>
+    </aside>
   </div>
-
 <script>
 /* ---------- Motor de ajedrez (representación 0=arriba/negras, 7=abajo/blancas) ---------- */
 const GLYPH={w:{k:'♔',q:'♕',r:'♖',b:'♗',n:'♘',p:'♙'},b:{k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}};
 const VAL={p:100,n:320,b:330,r:500,q:900,k:20000};
-let board, turn, selected, legalForSel, history, gameOver;
 
 function initBoard(){
   const b=Array.from({length:8},()=>Array(8).fill(null));
@@ -190,92 +165,124 @@ function bestAIMove(b,depth){
 }
 
 /* ---------- UI ---------- */
-const boardEl=document.getElementById('board');
-const statusEl=document.getElementById('status');
-const aiEl=document.getElementById('aimsg');
-let capByW=[],capByB=[];
 
-function newGame(){board=initBoard();turn='w';selected=null;legalForSel=[];history=[];gameOver=false;
-  capByW=[];capByB=[];aiEl.textContent='';render();updateStatus();}
-function render(){
-  boardEl.innerHTML='';
-  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-    const sq=document.createElement('div');
-    sq.className='sq '+((r+c)%2===0?'l':'d');
-    sq.dataset.r=r;sq.dataset.c=c;
-    const p=board[r][c];
-    if(p){const sp=document.createElement('span');sp.className=p.col==='w'?'piece-w':'piece-b';
-      sp.textContent=GLYPH[p.col][p.t];sq.appendChild(sp);}
-    if(selected&&selected[0]===r&&selected[1]===c)sq.classList.add('sel');
-    if(legalForSel.some(m=>m[0]===r&&m[1]===c)){
-      const mk=document.createElement('div');mk.className=board[r][c]?'ring':'dot';sq.appendChild(mk);}
-    if(c===0){const cr=document.createElement('div');cr.className='coord r';cr.textContent=8-r;sq.appendChild(cr);}
-    if(r===7){const cf=document.createElement('div');cf.className='coord f';cf.textContent='abcdefgh'[c];sq.appendChild(cf);}
-    sq.addEventListener('click',()=>onClick(r,c));
-    boardEl.appendChild(sq);
+/* ===== Terminal fiel del Ajedrez de Consola ===== */
+const out=document.getElementById('out'), cmd=document.getElementById('cmd'),
+      term=document.getElementById('term'), promptEl=document.getElementById('prompt');
+const SYM={w:{k:'\u2654',q:'\u2655',r:'\u2656',b:'\u2657',n:'\u2658',p:'\u2659'},
+           b:{k:'\u265A',q:'\u265B',r:'\u265C',b:'\u265D',n:'\u265E',p:'\u265F'}};
+function glyph(p){return SYM[p.col][p.t]+'\uFE0E';}
+function sq(r,c){return String.fromCharCode(97+c)+(8-r);}
+function p(s){out.textContent+=s+'\n'; scrollEnd();}
+function setPrompt(s){promptEl.textContent=s; scrollEnd();}
+function scrollEnd(){term.scrollTop=term.scrollHeight;}
+
+let state='menu', mode=null, depthReal=3, plysLabel='4';
+let board=null, turn='w', capW=[], capB=[], over=false;
+
+function printBoard(){
+  let s='';
+  s+='\nCapturadas por Negras: '+capW.map(glyph).join(' ');
+  s+='\nCapturadas por Blancas: '+capB.map(glyph).join(' ')+'\n';
+  s+='    '+['a','b','c','d','e','f','g','h'].join('   ')+'\n';
+  s+='  '+'-'.repeat(33)+'\n';
+  for(let r=0;r<8;r++){
+    let line=(8-r)+' | ';
+    for(let c=0;c<8;c++){const pc=board[r][c]; line+=(pc?glyph(pc):'+')+'   ';}
+    line+='| '+(8-r);
+    s+=line+'\n';
   }
-  document.getElementById('capW').textContent=capByW.length?capByW.map(t=>GLYPH.b[t]).join(' '):'—';
-  document.getElementById('capB').textContent=capByB.length?capByB.map(t=>GLYPH.w[t]).join(' '):'—';
+  s+='  '+'-'.repeat(33)+'\n';
+  s+='    '+['a','b','c','d','e','f','g','h'].join('   ');
+  p(s);
 }
-function onClick(r,c){
-  if(gameOver||turn!=='w')return;
-  const p=board[r][c];
-  if(selected){
-    if(legalForSel.some(m=>m[0]===r&&m[1]===c)){ humanMove(selected[0],selected[1],r,c); return; }
-    if(p&&p.col==='w'){ selected=[r,c]; legalForSel=legalMoves(board,r,c); render(); return; }
-    selected=null;legalForSel=[];render();return;
+function showMenu(){
+  state='menu'; mode=null;
+  p('\n--- Ajedrez de Consola ---'); p('1. Jugador vs. Jugador'); p('2. Jugador vs. IA'); p('3. Salir');
+  setPrompt('Elige una opci\u00f3n: ');
+}
+function showDifficulty(){
+  state='difficulty';
+  p('\n--- Dificultad de la IA ---'); p('1. F\u00e1cil (Piensa 2 plys)'); p('2. Medio (Piensa 4 plys)'); p('3. Dif\u00edcil (Piensa 5 plys)');
+  setPrompt('Elige una opci\u00f3n: ');
+}
+function startGame(vsAI){
+  board=initBoard(); turn='w'; capW=[]; capB=[]; over=false;
+  if(vsAI){ mode='ai'; p('\nIniciando partida: Jugador vs. IA (Profundidad '+plysLabel+' plys)...'); }
+  else { mode='pvp'; p('\nIniciando partida: Jugador vs. Jugador...'); }
+  gameStep();
+}
+function gameStep(){
+  if(over) return;
+  printBoard();
+  if(inCheck(board,turn)) p('\n\u00a1El rey '+(turn==='w'?'BLANCO':'NEGRO')+' est\u00e1 en JAQUE!');
+  p('\nTurno de las '+(turn==='w'?'Blancas.':'Negras.'));
+  const moves=allLegal(board,turn);
+  if(!moves.length){
+    if(inCheck(board,turn)) p('\u00a1JAQUE MATE! Ganan las '+(turn==='w'?'Negras.':'Blancas.'));
+    else p('\u00a1TABLAS! El jugador no tiene movimientos legales (Ahogado).');
+    over=true; p('\n(Escribe cualquier tecla y Enter para volver al men\u00fa)'); setPrompt(''); state='ended'; return;
   }
-  if(p&&p.col==='w'){selected=[r,c];legalForSel=legalMoves(board,r,c);render();}
+  if(mode==='ai' && turn==='b'){
+    setPrompt(''); p('La IA est\u00e1 pensando...'); state='busy';
+    setTimeout(aiMove, 60);
+  } else {
+    setPrompt('Ingrese su movimiento (ej: e2e4 o \'salir\' para terminar): '); state='playing';
+  }
 }
-function doMove(fr,fc,tr,tc){
-  const moving=board[fr][fc]; const target=board[tr][tc];
-  history.push({b:cloneBoard(board),turn,capW:[...capByW],capB:[...capByB]});
-  if(target){ if(moving.col==='w')capByW.push(target.t); else capByB.push(target.t); }
+function pushCaptured(pc){ if(pc.col==='w') capW.push(pc); else capB.push(pc); }
+function aiMove(){
+  const mv=bestAIMove(board,depthReal);
+  if(!mv){ over=true; return; }
+  const piece=board[mv[0]][mv[1]], target=board[mv[2]][mv[3]];
+  p('La IA ha movido '+glyph(piece)+' de '+sq(mv[0],mv[1])+sq(mv[2],mv[3]));
+  if(target){ p('\u00a1Captura! La pieza '+glyph(target)+' ha sido eliminada.'); pushCaptured(target); }
+  const promo=(piece.t==='p'&&(mv[2]===0||mv[2]===7));
+  board=applyMove(board,mv[0],mv[1],mv[2],mv[3]);
+  if(promo) p('\u00a1Promoci\u00f3n de Pe\u00f3n! \u2192 '+glyph({col:piece.col,t:'q'}));
+  turn='w'; gameStep();
+}
+function tryHumanMove(s){
+  if(s==='salir'){ p('\nPartida terminada por el jugador.'); over=true; setTimeout(showMenu,200); return; }
+  if(s.length!==4){ p('Error: Formato inv\u00e1lido. Deben ser 4 caracteres (ej: e2e4). Int\u00e9ntalo de nuevo.'); setPrompt('Ingrese su movimiento (ej: e2e4 o \'salir\' para terminar): '); return; }
+  const fc=s.charCodeAt(0)-97, fr=8-parseInt(s[1],10), tc=s.charCodeAt(2)-97, tr=8-parseInt(s[3],10);
+  if([fc,fr,tc,tr].some(x=>isNaN(x)||x<0||x>7)){ p('Error: Formato inv\u00e1lido. Deben ser 4 caracteres (ej: e2e4). Int\u00e9ntalo de nuevo.'); setPrompt('Ingrese su movimiento (ej: e2e4 o \'salir\' para terminar): '); return; }
+  const pc=board[fr][fc];
+  const legal=pc&&pc.col===turn&&legalMoves(board,fr,fc).some(m=>m[0]===tr&&m[1]===tc);
+  if(!legal){ p('Error: Movimiento ilegal. La pieza no puede moverse as\u00ed o deja al rey en jaque. Int\u00e9ntalo de nuevo.'); setPrompt('Ingrese su movimiento (ej: e2e4 o \'salir\' para terminar): '); return; }
+  const target=board[tr][tc];
+  if(target){ p('\u00a1Captura! La pieza '+glyph(target)+' ha sido eliminada.'); pushCaptured(target); }
+  const promo=(pc.t==='p'&&(tr===0||tr===7));
   board=applyMove(board,fr,fc,tr,tc);
+  if(promo) p('\u00a1Promoci\u00f3n de Pe\u00f3n! \u2192 '+glyph({col:pc.col,t:'q'}));
+  turn=(turn==='w')?'b':'w';
+  gameStep();
 }
-function humanMove(fr,fc,tr,tc){
-  doMove(fr,fc,tr,tc); selected=null;legalForSel=[];turn='b';render();
-  if(checkEnd('b'))return;
-  updateStatus(); aiEl.textContent='La IA está pensando…';
-  setTimeout(aiTurn,180);
-}
-function aiTurn(){
-  const depth=parseInt(document.getElementById('depth').value,10);
-  const t0=performance.now();
-  const mv=bestAIMove(board,depth);
-  const dt=Math.round(performance.now()-t0);
-  if(!mv){checkEnd('b');return;}
-  doMove(mv[0],mv[1],mv[2],mv[3]); turn='w'; render();
-  aiEl.textContent=`La IA movió ${'abcdefgh'[mv[1]]}${8-mv[0]} → ${'abcdefgh'[mv[3]]}${8-mv[2]} (${dt} ms)`;
-  if(checkEnd('w'))return;
-  updateStatus();
-}
-function checkEnd(col){
-  const moves=allLegal(board,col);
-  if(moves.length===0){
-    gameOver=true;
-    if(inCheck(board,col)) statusEl.textContent='♚ Jaque mate — '+(col==='w'?'¡Ganó la IA (Negras)!':'¡Ganaste tú (Blancas)!');
-    else statusEl.textContent='Tablas por ahogado (sin jugadas legales).';
-    aiEl.textContent='Pulsa “Nueva partida” para volver a jugar.';
-    return true;
+function handle(text){
+  const raw=text;
+  // echo del prompt + lo escrito
+  out.textContent += (promptEl.textContent||'') + raw + '\n'; setPrompt(''); scrollEnd();
+  const s=raw.trim().toLowerCase();
+  if(state==='menu'){
+    if(s==='1'){ startGame(false); }
+    else if(s==='2'){ showDifficulty(); }
+    else if(s==='3'){ p('Gracias por jugar. \u00a1Hasta pronto!'); showMenu(); }
+    else { p('Opci\u00f3n no v\u00e1lida. Por favor, elige 1, 2 o 3.'); showMenu(); }
+  } else if(state==='difficulty'){
+    if(s==='1'){ depthReal=2; plysLabel='2'; startGame(true); }
+    else if(s==='2'){ depthReal=3; plysLabel='4'; startGame(true); }
+    else if(s==='3'){ depthReal=4; plysLabel='5'; startGame(true); }
+    else { p('Opci\u00f3n no v\u00e1lida. Int\u00e9ntalo de nuevo.'); showDifficulty(); }
+  } else if(state==='playing'){
+    tryHumanMove(s);
+  } else if(state==='ended'){
+    showMenu();
   }
-  return false;
 }
-function updateStatus(){
-  let s='Turno: '+(turn==='w'?'Blancas (tú)':'Negras (IA)');
-  if(inCheck(board,turn)) s+=' — ¡Jaque!';
-  statusEl.textContent=s;
-}
-document.getElementById('reset').addEventListener('click',newGame);
-document.getElementById('undo').addEventListener('click',()=>{
-  if(turn!=='w'||gameOver||history.length<2){return;}
-  // deshace tu jugada + la de la IA (2 plies)
-  const prev=history[history.length-2]||history[0];
-  board=cloneBoard(prev.b);turn='w';capByW=[...prev.capW];capByB=[...prev.capB];
-  history=history.slice(0,history.length-2);
-  selected=null;legalForSel=[];gameOver=false;render();updateStatus();aiEl.textContent='';
-});
-newGame();
+cmd.addEventListener('keydown',e=>{ if(e.key==='Enter'){ const v=cmd.value; cmd.value=''; if(state==='busy')return; handle(v); }});
+term.addEventListener('click',()=>cmd.focus());
+// arranque
+p('\u265F\uFE0E  Ajedrez de Consola en Java  \u2014  IA: Minimax + poda Alfa-Beta');
+showMenu(); cmd.focus();
 </script>
-</body>
-</html>
+</body></html>
